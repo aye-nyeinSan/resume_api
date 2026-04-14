@@ -37,7 +37,7 @@ steps:
       - '-c'
       - |
         IMAGE_PATH="asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api"
-        gcloud artifacts docker images list "$IMAGE_PATH" \
+        gcloud artifacts docker images list "$$IMAGE_PATH" \
           --include-tags \
           --sort-by="~CREATE_TIME" \
           --format="value(version)" \
