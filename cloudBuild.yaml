@@ -50,3 +50,6 @@ steps:
 
 images:
   - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
