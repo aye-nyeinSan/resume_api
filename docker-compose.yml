@@ -1,0 +1,11 @@
+services:                                                                                        
+     backend:                                         
+        build: .
+        container_name: "resume-api"
+        ports:
+            - "8000:8000"
+        environment:
+           - GOOGLE_APPLICATION_CREDENTIALS=/secrets/serviceAccountKey.json
+        volumes:
+         - ./serviceAccountKey.json:/secrets/serviceAccountKey.json:ro
+        restart: unless-stopped #restart on crash

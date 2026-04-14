@@ -1,0 +1,7 @@
+.venv
+serviceAccountKey.json
+*/__pycache__/*
+gcp_setup.sh
+.env.*
+.env
+api/__pycache__/*

@@ -1,0 +1,52 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:$COMMIT_SHA'
+      - '.'
+
+  # Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:$COMMIT_SHA'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'resume-api'
+      - '--image'
+      - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:$COMMIT_SHA'
+      - '--region'
+      - 'asia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--port'
+      - '8000'
+      - '--allow-unauthenticated'
+
+  # Clean up old images, keep only the one just deployed
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        IMAGE_PATH="asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api"
+        gcloud artifacts docker images list "$IMAGE_PATH" \
+          --include-tags \
+          --sort-by="~CREATE_TIME" \
+          --format="value(version)" \
+        | tail -n +2 \
+        | while read -r DIGEST; do
+            echo "Deleting old image: $${IMAGE_PATH}@$${DIGEST}"
+            gcloud artifacts docker images delete "$${IMAGE_PATH}@$${DIGEST}" \
+              --delete-tags --quiet || true
+          done
+
+images:
+  - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:$COMMIT_SHA'
