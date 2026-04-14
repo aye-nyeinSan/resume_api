@@ -1,17 +1,32 @@
 steps:
-  # Build the Docker image
+  # Pull the previous image to prime the build cache (ignore failure on first build)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        docker pull asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:latest || exit 0
+
+  # Build using the previous image as cache, tag with both commit SHA and latest
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      - '--cache-from'
+      - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:latest'
       - '-t'
       - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:$COMMIT_SHA'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:latest'
       - '.'
+    env:
+      - 'DOCKER_BUILDKIT=1'
 
-  # Push the image to Artifact Registry
+  # Push both tags to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:$COMMIT_SHA'
+      - '--all-tags'
+      - 'asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api'
 
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -28,7 +43,7 @@ steps:
       - 'managed'
       - '--port'
       - '8080'
-      - '--allow-unauthenticated'
+      - '--no-invoker-iam-check'
 
   # Clean up old images, keep only the one just deployed
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
