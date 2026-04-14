@@ -29,6 +29,7 @@ steps:
       - '--port'
       - '8080'
       - '--allow-unauthenticated'
+      - '--no-invoker-iam-check'
 
   # Clean up old images, keep only the one just deployed
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
