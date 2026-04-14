@@ -27,7 +27,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--port'
-      - '8000'
+      - '8080'
       - '--allow-unauthenticated'
 
   # Clean up old images, keep only the one just deployed
