@@ -1,0 +1,10 @@
+services:                                                                                           
+    backend:
+      image: asia-southeast1-docker.pkg.dev/test-app-rubi/resume-api/resume-api:latest
+      container_name: "resume-api-prod"
+      ports:
+            - "8001:8001"
+      environment:
+           - GOOGLE_APPLICATION_CREDENTIALS=/secrets/serviceAccountKey.json
+      volumes:
+         - ./serviceAccountKey.json:/secrets/serviceAccountKey.json:ro

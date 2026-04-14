@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends 
 from google.cloud import firestore
-
+from pyrate_limiter import Duration, Limiter, Rate
+from fastapi_limiter.depends import RateLimiter
 from config.firestoreDb import db as firestoreDB
 
 router = APIRouter(prefix="/resume", tags=['resume'])
@@ -10,14 +11,14 @@ visitors_ref = firestoreDB.collection('visitors')
 stats_ref = firestoreDB.collection('stats').document('resume')
 
 
-@router.get("/visits")
+@router.get("/visits", dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 5))))])
 def track_visit():
     docs = visitors_ref.stream()
     visitors = [doc.to_dict() for doc in docs]
     return {"total": len(visitors), "visitors": visitors}
 
 
-@router.post("/visits")
+@router.post("/visits", dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 5))))])
 def add_visitor(request: Request) -> dict:
     print("Request:", request)
     ip = request.headers.get("X-Forwarded-For", request.client.host if
@@ -38,7 +39,7 @@ def add_visitor(request: Request) -> dict:
     return {"message": "successfully added visitor to DB", "is_new": is_new}
 
 
-@router.get("/visitor-status")
+@router.get("/visitor-status", dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 5))))])
 def get_stats():
     doc = stats_ref.get()
     return doc.to_dict() if doc.exists else {"total_visitors": 0, "total_love_count": 0}
