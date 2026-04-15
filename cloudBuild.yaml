@@ -43,7 +43,6 @@ steps:
       - 'managed'
       - '--port'
       - '8080'
-      - '--no-invoker-iam-check'
 
   # Clean up old images, keep only the one just deployed
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
