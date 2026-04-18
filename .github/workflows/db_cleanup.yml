@@ -1,0 +1,12 @@
+name: Daily IP Cleanup For Firestore Visitors Document
+on:
+  schedule:
+    - cron: '0 3 * * *' # Every day at 3:00 AM
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cleanup API
+        run: |
+          curl -X DELETE https://resume-api-663510613257.asia-southeast1.run.app/resume/visitors/cleanup \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
