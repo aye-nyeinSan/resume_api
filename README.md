@@ -11,21 +11,28 @@ Client ──► FastAPI (Cloud Run) ──► Firestore
 
 GitHub ──(push to main)──► Cloud Build ──► Artifact Registry ──► Cloud Run
 ```
-
 - **Runtime:** FastAPI app on Cloud Run, reading/writing to Firestore.
 - **CI/CD:** Push to `main` triggers Cloud Build, which builds a Docker image, pushes it to Artifact Registry, deploys to Cloud Run, and cleans up old images.
 - **Infra:** Terraform provisions APIs, Artifact Registry, IAM bindings, and Cloud Build triggers.
+
+## The Reason Why I chose this Architecture: 
+- `FastAPI` is simple, easy, and fast to implement since the api logic for this project is not complicated.
+- `FireStore` as a `database` since the project would mainly use the read/write, which stays within the free tier of daily 50K reads, and 20K writes, and I also delete the old IP with a cron job by calling the api endpoints(/resume/visitors/cleanup) with GitHub Actions which is not exceeded over a free tier of daily 20K deletes
+- `CI/CD` as a `Cloud Build and Artifact Registry` to stay within the Google Cloud free tier, the pipeline includes a cleanup step that removes old container images to keep storage usage below the free limit
+- `Cloud Run` for hosting my backend api with cost efficiency and reliability, since Cloud Run serverless doesn't run the service if there is no request call, and a monthly free tier for CPU (per vCPU-second) and Memory (per GiB-second)
+
+
 
 ## Endpoints
 
 All routes are prefixed with `/resume` and rate-limited to 2 requests per 5 seconds.
 
 | Method | Path               | Description                                   |
-| ------ | ------------------ | --------------------------------------------- |
-| GET    | `/resume/visits`         | List all tracked visitors and total count    |
+| ------ | ------------------ | --------------------------------------------- |   
 | POST   | `/resume/visits`         | Record the caller's IP as a visitor          |
 | GET    | `/resume/visitor-status` | Aggregate stats (total visitors, love count) |
 | POST   | `/resume/love-votes`     | Increment the love counter                   |
+| DELETE  | `/resume/visitors/cleanup`     | Delete the unused old IPs from the firstore                 |
 
 ## Project structure
 
@@ -56,7 +63,7 @@ pip install -r requirements.txt
 docker compose up --build
 
 # Or run directly
-fastapi dev main.py
+fastapi dev 
 ```
 
 The API is available at `http://localhost:8000`. Interactive docs at `/docs`.
@@ -85,7 +92,7 @@ Changes under `terraform/**` on `main` trigger a separate `terraform apply` buil
 - **Container:** Docker (python:3.12-slim)
 - **CI/CD:** Cloud Build, Artifact Registry, Cloud Run
 - **IaC:** Terraform (state in GCS)
-- **Region:** `asia-southeast1`
+- **Region:** `asia-southeast1` 
 
 
 <img width="2444" height="1086" alt="image" src="https://github.com/user-attachments/assets/c6b74b4f-9568-4708-b6cc-f77f7ec4ce1b" />
